@@ -1,45 +1,35 @@
 #include <iostream>
 #include <vector>
-#include <unordered_set>
-#include <unordered_map>
+#include <queue>
 using namespace std;
 
-int countPossibleRoots(vector<vector<int>>& edges, vector<vector<int>>& guesses, int k) {
-    int n = edges.size() + 1;
-    unordered_map<int, unordered_set<int>> tree;
-    unordered_map<int, unordered_set<int>> guessSet;
+// Function to find the shortest path in binary matrix
+int shortestPathBinaryMatrix(vector<vector<int>>& grid) {
+    int n = grid.size();
+    if (grid[0][0] || grid[n - 1][n - 1]) return -1;
 
-    for (auto& edge : edges) {
-        tree[edge[0]].insert(edge[1]);
-        tree[edge[1]].insert(edge[0]);
-    }
-    for (auto& guess : guesses) {
-        guessSet[guess[0]].insert(guess[1]);
-    }
+    queue<pair<int, int>> q;
+    q.push({0, 0});
+    grid[0][0] = 1;
 
-    int count = 0;
-    function<int(int, int)> dfs = [&](int node, int parent) {
-        int correctGuesses = 0;
-        for (int child : tree[node]) {
-            if (child == parent) continue;
-            correctGuesses += dfs(child, node);
+    vector<int> dirs = {-1, -1, -1, 0, 1, 1, 1, 0, -1};
+    while (!q.empty()) {
+        auto [x, y] = q.front();
+        q.pop();
+        if (x == n - 1 && y == n - 1) return grid[x][y];
+        for (int d = 0; d < 8; ++d) {
+            int nx = x + dirs[d], ny = y + dirs[d + 1];
+            if (nx >= 0 && ny >= 0 && nx < n && ny < n && grid[nx][ny] == 0) {
+                grid[nx][ny] = grid[x][y] + 1;
+                q.push({nx, ny});
+            }
         }
-        if (guessSet[parent].count(node)) correctGuesses++;
-        if (correctGuesses >= k) count++;
-        return correctGuesses;
-    };
-
-    dfs(0, -1);
-    return count;
+    }
+    return -1;
 }
 
-// Example usage
 int main() {
-    vector<vector<int>> edges = {{0, 1}, {1, 2}, {1, 3}, {4, 2}};
-    vector<vector<int>> guesses = {{1, 3}, {0, 1}, {1, 0}, {2, 4}};
-    int k = 3;
-
-    cout << "Possible Roots: " << countPossibleRoots(edges, guesses, k) << endl;
-
+    vector<vector<int>> grid = {{0, 1}, {1, 0}};
+    cout << "Shortest Path: " << shortestPathBinaryMatrix(grid) << endl;
     return 0;
 }
