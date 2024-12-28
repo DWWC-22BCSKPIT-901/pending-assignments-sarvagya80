@@ -1,43 +1,47 @@
 #include <iostream>
 #include <vector>
-#include <unordered_map>
+#include <queue>
 using namespace std;
 
-struct TreeNode {
-    int val;
-    TreeNode* left;
-    TreeNode* right;
-    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
-};
+// Function to calculate the distance of the nearest 0 for each cell
+vector<vector<int>> updateMatrix(vector<vector<int>>& mat) {
+    int m = mat.size(), n = mat[0].size();
+    vector<vector<int>> result(m, vector<int>(n, INT_MAX));
+    queue<pair<int, int>> q;
 
-TreeNode* buildTreeHelper(vector<int>& preorder, vector<int>& inorder, int& preorderIndex, int left, int right, unordered_map<int, int>& inorderMap) {
-    if (left > right) return nullptr;
-
-    int rootVal = preorder[preorderIndex++];
-    TreeNode* root = new TreeNode(rootVal);
-
-    root->left = buildTreeHelper(preorder, inorder, preorderIndex, left, inorderMap[rootVal] - 1, inorderMap);
-    root->right = buildTreeHelper(preorder, inorder, preorderIndex, inorderMap[rootVal] + 1, right, inorderMap);
-
-    return root;
-}
-
-TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
-    unordered_map<int, int> inorderMap;
-    for (int i = 0; i < inorder.size(); i++) {
-        inorderMap[inorder[i]] = i;
+    for (int i = 0; i < m; ++i) {
+        for (int j = 0; j < n; ++j) {
+            if (mat[i][j] == 0) {
+                result[i][j] = 0;
+                q.push({i, j});
+            }
+        }
     }
-    int preorderIndex = 0;
-    return buildTreeHelper(preorder, inorder, preorderIndex, 0, inorder.size() - 1, inorderMap);
+
+    vector<int> dirs = {-1, 0, 1, 0, -1};
+    while (!q.empty()) {
+        auto [x, y] = q.front();
+        q.pop();
+        for (int d = 0; d < 4; ++d) {
+            int nx = x + dirs[d], ny = y + dirs[d + 1];
+            if (nx >= 0 && ny >= 0 && nx < m && ny < n && result[nx][ny] > result[x][y] + 1) {
+                result[nx][ny] = result[x][y] + 1;
+                q.push({nx, ny});
+            }
+        }
+    }
+    return result;
 }
 
-// Example usage
 int main() {
-    vector<int> preorder = {3, 9, 20, 15, 7};
-    vector<int> inorder = {9, 3, 15, 20, 7};
+    vector<vector<int>> mat1 = {{0, 0, 0}, {0, 1, 0}, {0, 0, 0}};
+    vector<vector<int>> result1 = updateMatrix(mat1);
 
-    TreeNode* root = buildTree(preorder, inorder);
-    cout << "Tree constructed successfully!" << endl;
+    cout << "Updated Matrix: " << endl;
+    for (auto& row : result1) {
+        for (int val : row) cout << val << " ";
+        cout << endl;
+    }
 
     return 0;
 }
